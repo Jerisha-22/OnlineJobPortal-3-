@@ -1,24 +1,313 @@
-# Compiled class file
-*.class
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-# Log file
-*.log
+// Job class to represent job details
+class Job {
+    private String title;
+    private String description;
+    private String company;
+    private double salary;
+    private String postedBy;
 
-# BlueJ files
-*.ctxt
+    public Job(String title, String description, String company, double salary, String postedBy) {
+        this.title = title;
+        this.description = description;
+        this.company = company;
+        this.salary = salary;
+        this.postedBy = postedBy;
+    }
 
-# Mobile Tools for Java (J2ME)
-.mtj.tmp/
+    public String getTitle() {
+        return title;
+    }
 
-# Package Files #
-*.jar
-*.war
-*.nar
-*.ear
-*.zip
-*.tar.gz
-*.rar
+    public String getCompany() {
+        return company;
+    }
 
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
-hs_err_pid*
-replay_pid*
+    public String getDescription() {
+        return description;
+    }
+
+    public double getSalary() {
+        return salary;
+    }
+
+    public String getPostedBy() {
+        return postedBy;
+    }
+
+    @Override
+    public String toString() {
+        return "<html><b>Title:</b> " + title + "<br><b>Company:</b> " + company +
+                "<br><b>Salary:</b> $" + salary + "<br><b>Description:</b> " + description +
+                "<br><b>Posted By:</b> " + postedBy + "</html>";
+    }
+}
+
+// Main application
+public class JobPortalApp extends JFrame {
+    private final Map<String, String> users = new HashMap<>(); // Stores username-password pairs
+    private final Map<String, String> roles = new HashMap<>(); // Stores username-role pairs
+    private final List<Job> jobList = new ArrayList<>();
+    private final Map<String, List<Job>> appliedJobs = new HashMap<>();
+    private String currentUser = null;
+
+    public JobPortalApp() {
+        setTitle("Online Job Portal");
+        setSize(600, 400);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
+        setLayout(new CardLayout());
+        showMainScreen();
+    }
+
+    private void showMainScreen() {
+        JPanel mainPanel = new JPanel(new GridLayout(3, 1, 10, 10));
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        JLabel welcomeLabel = new JLabel("Welcome to the Online Job Portal", SwingConstants.CENTER);
+        welcomeLabel.setFont(new Font("Arial", Font.BOLD, 18));
+        mainPanel.add(welcomeLabel);
+
+        JButton registerButton = new JButton("Register");
+        JButton loginButton = new JButton("Login");
+
+        mainPanel.add(registerButton);
+        mainPanel.add(loginButton);
+
+        setContentPane(mainPanel);
+
+        registerButton.addActionListener(e -> showRegisterScreen());
+        loginButton.addActionListener(e -> showLoginScreen());
+
+        setVisible(true);
+    }
+
+    private void showRegisterScreen() {
+        JPanel registerPanel = new JPanel(new GridLayout(5, 2, 10, 10));
+        registerPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        JLabel registerLabel = new JLabel("Register", SwingConstants.CENTER);
+        registerLabel.setFont(new Font("Arial", Font.BOLD, 18));
+        registerPanel.add(registerLabel);
+        registerPanel.add(new JLabel()); // For alignment
+
+        JTextField usernameField = new JTextField();
+        JPasswordField passwordField = new JPasswordField();
+        JComboBox<String> roleComboBox = new JComboBox<>(new String[]{"Employer", "Job Seeker"});
+
+        registerPanel.add(new JLabel("Username:"));
+        registerPanel.add(usernameField);
+        registerPanel.add(new JLabel("Password:"));
+        registerPanel.add(passwordField);
+        registerPanel.add(new JLabel("Role:"));
+        registerPanel.add(roleComboBox);
+
+        JButton registerButton = new JButton("Register");
+        JButton backButton = new JButton("Back");
+
+        registerPanel.add(registerButton);
+        registerPanel.add(backButton);
+
+        setContentPane(registerPanel);
+
+        registerButton.addActionListener(e -> {
+            String username = usernameField.getText().trim();
+            String password = new String(passwordField.getPassword()).trim();
+            String role = (String) roleComboBox.getSelectedItem();
+
+            if (username.isEmpty() || password.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "All fields are required!", "Error", JOptionPane.ERROR_MESSAGE);
+            } else if (users.containsKey(username)) {
+                JOptionPane.showMessageDialog(this, "Username already exists!", "Error", JOptionPane.ERROR_MESSAGE);
+            } else {
+                users.put(username, password);
+                roles.put(username, role);
+                if (role.equals("Job Seeker")) {
+                    appliedJobs.put(username, new ArrayList<>());
+                }
+                JOptionPane.showMessageDialog(this, "Registration successful!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                showMainScreen();
+            }
+        });
+
+        backButton.addActionListener(e -> showMainScreen());
+
+        setVisible(true);
+    }
+
+    private void showLoginScreen() {
+        JPanel loginPanel = new JPanel(new GridLayout(4, 2, 10, 10));
+        loginPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        JLabel loginLabel = new JLabel("Login", SwingConstants.CENTER);
+        loginLabel.setFont(new Font("Arial", Font.BOLD, 18));
+        loginPanel.add(loginLabel);
+        loginPanel.add(new JLabel()); // For alignment
+
+        JTextField usernameField = new JTextField();
+        JPasswordField passwordField = new JPasswordField();
+
+        loginPanel.add(new JLabel("Username:"));
+        loginPanel.add(usernameField);
+        loginPanel.add(new JLabel("Password:"));
+        loginPanel.add(passwordField);
+
+        JButton loginButton = new JButton("Login");
+        JButton backButton = new JButton("Back");
+
+        loginPanel.add(loginButton);
+        loginPanel.add(backButton);
+
+        setContentPane(loginPanel);
+
+        loginButton.addActionListener(e -> {
+            String username = usernameField.getText().trim();
+            String password = new String(passwordField.getPassword()).trim();
+
+            if (users.containsKey(username) && users.get(username).equals(password)) {
+                currentUser = username;
+                String role = roles.get(username);
+                if ("Employer".equals(role)) {
+                    showEmployerPanel();
+                } else {
+                    showJobSeekerPanel();
+                }
+            } else {
+                JOptionPane.showMessageDialog(this, "Invalid username or password!", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        backButton.addActionListener(e -> showMainScreen());
+
+        setVisible(true);
+    }
+
+    private void showEmployerPanel() {
+        JFrame employerFrame = new JFrame("Employer Panel");
+        employerFrame.setSize(500, 400);
+        employerFrame.setLocationRelativeTo(null);
+        employerFrame.setLayout(new BorderLayout());
+
+        JLabel titleLabel = new JLabel("Post a Job", SwingConstants.CENTER);
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        employerFrame.add(titleLabel, BorderLayout.NORTH);
+
+        JPanel formPanel = new JPanel(new GridLayout(5, 2, 10, 10));
+        formPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        JTextField titleField = new JTextField();
+        JTextField companyField = new JTextField();
+        JTextField salaryField = new JTextField();
+        JTextArea descriptionArea = new JTextArea(3, 20);
+
+        formPanel.add(new JLabel("Job Title:"));
+        formPanel.add(titleField);
+        formPanel.add(new JLabel("Company Name:"));
+        formPanel.add(companyField);
+        formPanel.add(new JLabel("Salary:"));
+        formPanel.add(salaryField);
+        formPanel.add(new JLabel("Description:"));
+        formPanel.add(new JScrollPane(descriptionArea));
+
+        employerFrame.add(formPanel, BorderLayout.CENTER);
+
+        JButton postJobButton = new JButton("Post Job");
+        JButton logoutButton = new JButton("Logout");
+
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.add(postJobButton);
+        buttonPanel.add(logoutButton);
+
+        employerFrame.add(buttonPanel, BorderLayout.SOUTH);
+
+        postJobButton.addActionListener(e -> {
+            String title = titleField.getText();
+            String company = companyField.getText();
+            double salary;
+            try {
+                salary = Double.parseDouble(salaryField.getText());
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(employerFrame, "Invalid salary input!", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            String description = descriptionArea.getText();
+
+            if (title.isEmpty() || company.isEmpty() || description.isEmpty()) {
+                JOptionPane.showMessageDialog(employerFrame, "All fields are required!", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            jobList.add(new Job(title, description, company, salary, currentUser));
+            JOptionPane.showMessageDialog(employerFrame, "Job posted successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+        });
+
+        logoutButton.addActionListener(e -> {
+            employerFrame.dispose();
+            currentUser = null;
+            showMainScreen();
+        });
+
+        employerFrame.setVisible(true);
+    }
+
+    private void showJobSeekerPanel() {
+        JFrame seekerFrame = new JFrame("Job Seeker Panel");
+        seekerFrame.setSize(500, 400);
+        seekerFrame.setLocationRelativeTo(null);
+        seekerFrame.setLayout(new BorderLayout());
+
+        JLabel titleLabel = new JLabel("Available Jobs", SwingConstants.CENTER);
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        seekerFrame.add(titleLabel, BorderLayout.NORTH);
+
+        JPanel jobPanel = new JPanel();
+        jobPanel.setLayout(new BoxLayout(jobPanel, BoxLayout.Y_AXIS));
+
+        if (jobList.isEmpty()) {
+            jobPanel.add(new JLabel("No jobs available!"));
+        } else {
+            for (Job job : jobList) {
+                JPanel jobItem = new JPanel(new BorderLayout());
+                jobItem.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+
+                JLabel jobLabel = new JLabel(job.toString());
+                JButton applyButton = new JButton("Apply");
+
+                jobItem.add(jobLabel, BorderLayout.CENTER);
+                jobItem.add(applyButton, BorderLayout.EAST);
+
+                applyButton.addActionListener(e -> {
+                    appliedJobs.get(currentUser).add(job);
+                    JOptionPane.showMessageDialog(seekerFrame, "Successfully applied to: " + job.getTitle(), "Success", JOptionPane.INFORMATION_MESSAGE);
+                });
+
+                jobPanel.add(jobItem);
+            }
+        }
+
+        JScrollPane scrollPane = new JScrollPane(jobPanel);
+        seekerFrame.add(scrollPane, BorderLayout.CENTER);
+
+        JButton logoutButton = new JButton("Logout");
+        seekerFrame.add(logoutButton, BorderLayout.SOUTH);
+
+        logoutButton.addActionListener(e -> {
+            seekerFrame.dispose();
+            currentUser = null;
+            showMainScreen();
+        });
+
+        seekerFrame.setVisible(true);
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(JobPortalApp::new);
+    }
+}
