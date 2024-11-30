@@ -1,0 +1,1 @@
+An online job portal is a digital platform designed to connect job seekers and employers efficiently. It serves as a virtual marketplace where individuals can search for employment opportunities and employers can post job openings to find suitable candidates.
